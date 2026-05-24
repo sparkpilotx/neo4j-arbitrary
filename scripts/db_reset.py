@@ -39,11 +39,15 @@ try:
 
         driver.verify_connectivity()
         with driver.session(database=db) as s:
-            row = s.run(
-                "CALL dbms.components() YIELD name, versions WHERE name = 'Cypher' RETURN versions[-1] AS version"
-            ).single()
-            cypher_language = f"CYPHER {row['version']}" if row else "unknown"
-        emit("done", database=db, uri=uri, cypher_language=cypher_language, status="ok")
+            rows = {
+                r["name"]: r
+                for r in s.run("CALL dbms.components() YIELD name, versions, edition").data()
+            }
+            cypher_language = f"CYPHER {rows['Cypher']['versions'][-1]}" if "Cypher" in rows else "unknown"
+            kernel = rows.get("Neo4j Kernel", {})
+            neo4j_version = kernel.get("versions", ["unknown"])[0]
+            edition = kernel.get("edition", "unknown")
+        emit("done", database=db, edition=edition, version=neo4j_version, cypher_language=cypher_language, status="ok")
 
 except Exception as exc:
     emit("error", database=db, message=str(exc))
