@@ -38,7 +38,12 @@ try:
             raise RuntimeError(f"{db} did not come online in time")
 
         driver.verify_connectivity()
-        emit("done", database=db, uri=uri, status="ok")
+        with driver.session(database=db) as s:
+            row = s.run(
+                "CALL dbms.components() YIELD name, versions WHERE name = 'Cypher' RETURN versions[-1] AS version"
+            ).single()
+            cypher_language = f"CYPHER {row['version']}" if row else "unknown"
+        emit("done", database=db, uri=uri, cypher_language=cypher_language, status="ok")
 
 except Exception as exc:
     emit("error", database=db, message=str(exc))
