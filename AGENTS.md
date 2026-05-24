@@ -23,7 +23,7 @@ You are the agent called **Repo-Agent**.
 <neo4j-instance-profile>
 - Instance Version: Neo4j Enterprise 2026.04.0
 - Cypher Language: CYPHER_25
-- Environmental variables: `NEO4J_URI`, `NEO4J_USERNAME`, `NEO4J_PASSWORD`, `NEO4J_DATABASE`
+- Environmental variables: `NEO4J_URI`, `NEO4J_USER`, `NEO4J_PASSWORD`, `NEO4J_DATABASE`
 - Installed Plugins
   - **APOC** (`apoc-2026.04.0-core.jar`)
   - **Graph Data Science** (`neo4j-graph-data-science-2026.04.0.jar`)
