@@ -5,6 +5,7 @@ Repo-Agent 的操作规范。本文件的优先级高于通用编程习惯。
 
 - Python **3.12**，不得使用 3.12 前引入的 workaround（如手写 `TypeAlias`）
 - 包管理：`uv`（`uv add`、`uv run`、`uv sync`）
+- 构建后端：`uv_build`（`[build-system] requires = ["uv_build"]`，不用 hatchling/setuptools）
 - 格式化 + lint：`ruff check --fix && ruff format`（单一工具，不引入 black/flake8/isort）
 - 类型检查：`pyright --pythonversion 3.12`（strict mode，不用 mypy）
 - 测试：`pytest -x --tb=short`
