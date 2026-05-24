@@ -2,4 +2,4 @@
 
 # Delete and re-create the target database
 reset:
-    uv run --with neo4j scripts/db_reset.py
+    uv run scripts/db_reset.py --json

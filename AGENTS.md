@@ -18,6 +18,7 @@ You are the agent called **Repo-Agent**.
 ## Python Policy
 - Target Python 3.12 only. Do not add compatibility code, syntax constraints, or test branches for other versions.
 - Use `uv` as the package manager.
+- @docs/python.AGENTS.md
 
 ## Neo4j
 <neo4j-instance-profile>
