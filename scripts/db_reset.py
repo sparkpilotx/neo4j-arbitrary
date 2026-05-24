@@ -1,10 +1,12 @@
 """Drop and re-create the database named by NEO4J_DATABASE."""
+
 import argparse
 import json
 import os
 import sys
 import time
 from enum import StrEnum
+from typing import LiteralString, cast
 
 import structlog
 from neo4j import Driver, GraphDatabase
@@ -70,7 +72,7 @@ def load_config() -> DbConfig:
 
 def _wait_online(driver: Driver, database: str, log: structlog.BoundLogger) -> None:
     for _ in range(20):
-        with driver.session(database="system") as s:
+        with driver.session(database="system") as s:  # pyright: ignore[reportUnknownMemberType]
             row = s.run(
                 "SHOW DATABASES YIELD name, currentStatus WHERE name = $n",
                 n=database,
@@ -88,17 +90,18 @@ def _wait_online(driver: Driver, database: str, log: structlog.BoundLogger) -> N
 
 
 def reset_db(cfg: DbConfig, log: structlog.BoundLogger) -> None:
-    with GraphDatabase.driver(cfg.uri, auth=(cfg.user, cfg.password)) as driver:
-        with driver.session(database="system") as s:
-            s.run(f"DROP DATABASE `{cfg.database}` IF EXISTS")
+    with GraphDatabase.driver(cfg.uri, auth=(cfg.user, cfg.password)) as driver:  # pyright: ignore[reportUnknownMemberType]
+        with driver.session(database="system") as s:  # pyright: ignore[reportUnknownMemberType]
+            # DROP/CREATE DATABASE has no $param support for names; backtick-escaped env var is safe
+            s.run(cast(LiteralString, f"DROP DATABASE `{cfg.database}` IF EXISTS"))
             log.info("db_dropped", database=cfg.database)
-            s.run(f"CREATE DATABASE `{cfg.database}`")
+            s.run(cast(LiteralString, f"CREATE DATABASE `{cfg.database}`"))
             log.info("db_created", database=cfg.database)
 
         _wait_online(driver, cfg.database, log)
 
-        driver.verify_connectivity()
-        with driver.session(database=cfg.database) as s:
+        driver.verify_connectivity()  # pyright: ignore[reportUnknownMemberType]
+        with driver.session(database=cfg.database) as s:  # pyright: ignore[reportUnknownMemberType]
             rows = s.run("CALL dbms.components() YIELD name, versions, edition").data()
 
         by_name = {r["name"]: r for r in rows}
@@ -129,14 +132,18 @@ def print_error(err: AppError, *, as_json: bool) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--json", dest="as_json", action="store_true", help="Emit NDJSON events to stdout")
+    parser.add_argument(
+        "--json", dest="as_json", action="store_true", help="Emit NDJSON events to stdout"
+    )
     args = parser.parse_args()
 
     structlog.configure(
         processors=[
             structlog.processors.add_log_level,
             structlog.processors.TimeStamper(fmt="iso"),
-            structlog.processors.JSONRenderer() if args.as_json else structlog.dev.ConsoleRenderer(),
+            structlog.processors.JSONRenderer()
+            if args.as_json
+            else structlog.dev.ConsoleRenderer(),
         ],
     )
     log: structlog.BoundLogger = structlog.get_logger()
